@@ -25,6 +25,6 @@
     "@modelcontextprotocol/sdk": "^1.13.0",
     "ai": "^4.3.16",
     "dotenv": "^16.5.0",
-    "zod": "^3.25.67"
+    "zod": "^3.25.76"
   }
 }
