@@ -1,5 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import z from "zod";
+import fs from "node:fs/promises"
 
 const server = new McpServer({
     name:"test",
@@ -10,6 +12,50 @@ const server = new McpServer({
         prompts:{},
     }
 })
+
+server.tool("create-user", "Create a new uer in teh database",{
+    name: z.string(),
+    email:z.string(),
+    address: z.string(),
+    phone: z.string(),
+},{
+    title: "Create User",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true, //does interact with the external world?
+
+}, async (params) => {
+    try {
+       const id = await createUser(params)
+       return{
+            content:[
+                {type: "text", text: `User ${id} created successfully`}
+            ]
+        }
+    } catch {
+        return{
+            content:[
+                {type: "text", text: "Failed to save user"}
+            ]
+        }
+    }
+})
+
+async function createUser(user:{
+    name: string,
+    email:string,
+    address: string,
+    phone:string
+}){
+    const users = await import("./data/users.json",{
+        with:{type: "json"}
+    } ).then(m => m.default)
+    const id = users.length + 1;
+    users.push({id, ...user})
+    await fs.writeFile("./src/data/users.json", JSON.stringify(users, null, 2))
+}
+
 
 async function main() {
     const transport = new StdioServerTransport()
