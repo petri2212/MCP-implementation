@@ -47,7 +47,7 @@ server.resource("user-details", new mcp_js_1.ResourceTemplate("users://{userId}/
         contents: [{ uri: uri.href, text: JSON.stringify(user), mimeType: "application/json" }]
     };
 });
-server.tool("create-user", "Create a new uer in teh database", {
+server.tool("create-user", "Create a new user in the database", {
     name: zod_1.default.string(),
     email: zod_1.default.string(),
     address: zod_1.default.string(),

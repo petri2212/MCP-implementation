@@ -33,5 +33,12 @@
         "email": "petri",
         "address": "via provinciales",
         "phone": "pippo pluto e paperino"
+    },
+    {
+        "id": 6,
+        "name": "Emily Johnson",
+        "email": "emily.johnson@example.com",
+        "address": "123 Main Street, Anytown, USA",
+        "phone": "555-555-5555"
     }
 ]
