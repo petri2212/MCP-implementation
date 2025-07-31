@@ -55,7 +55,7 @@ server.resource("user-details", new ResourceTemplate("users://{userId}/profile",
 )
 
 
-server.tool("create-user", "Create a new uer in teh database",{
+server.tool("create-user", "Create a new user in the database",{
     name: z.string(),
     email:z.string(),
     address: z.string(),
