@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"my-mcp-server-561704be": {
+			"type": "stdio",
+			"command": "npm",
+			"args": [
+				"run",
+				"server:dev"
+			]
+		}
+	},
+	"inputs": []
+}
