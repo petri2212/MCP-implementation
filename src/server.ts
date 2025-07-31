@@ -1,3 +1,4 @@
+import "dotenv/config"
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import z from "zod";
@@ -52,6 +53,43 @@ server.resource("user-details", new ResourceTemplate("users://{userId}/profile",
         }
     }
 
+)
+
+server.resource("get-jobs", "job://all",
+  {
+        description: "Get all jobs from a database",
+        title: "jobs",
+        mimeType: "application/json"
+    }, async uri => {
+    const appId = process.env.ADZUNA_APP_ID;
+    const appKey = process.env.ADZUNA_APP_KEY;
+
+    const response = await fetch(`https://api.adzuna.com/v1/api/jobs/it/search/1?app_id=${appId}&app_key=${appKey}&&results_per_page=20&what=javascript%20developer&content-type=application/json`);
+    http://api.adzuna.com/v1/api/jobs/gb/search/1?app_id={YOUR API ID}&app_key={YOUR API KEY}&results_per_page=20&what=javascript%20developer&content-type=application/json
+    if (!response.ok) {
+      throw new Error(`Failed to fetch jobs from Adzuna: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const jobs = data.results.map((job: { title: any; company: { display_name: any; }; location: { display_name: any; }; description: any; redirect_url: any; }) => ({
+  title: job.title,
+  company: job.company.display_name,
+  location: job.location.display_name,
+  description: job.description,
+  url: job.redirect_url
+  }));
+    
+    //content as [{ text: string }])[0].text
+    return {
+      
+      contents: [{
+        uri: uri.href,
+        text: JSON.stringify(jobs, null, 2), //JSON.stringify(data), // or filter it before returning
+        mimeType: "application/json"
+      }]
+     
+    };
+  }
 )
 
 
