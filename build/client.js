@@ -37,8 +37,28 @@ async function main() {
                         description: tool.description,
                     })),
                 });
-                console.log(toolName);
+                const tool = tools.find(t => t.name === toolName);
+                if (tool == null) {
+                    console.error("Tool not found.");
+                }
+                else {
+                    await handleTool(tool);
+                }
+                break;
         }
     }
+}
+async function handleTool(tool) {
+    const args = {};
+    for (const [key, value] of Object.entries(tool.inputSchema.properties ?? {})) {
+        args[key] = await (0, prompts_1.input)({
+            message: `Enter value for ${key}(${value.type}): `
+        });
+    }
+    const res = mcp.callTool({
+        name: tool.name,
+        arguments: args
+    });
+    console.log((await res).content[0].text);
 }
 main();

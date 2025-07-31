@@ -139,6 +139,7 @@ async function createUser(user) {
     const id = users.length + 1;
     users.push({ id, ...user });
     await promises_1.default.writeFile("./src/data/users.json", JSON.stringify(users, null, 2));
+    return id;
 }
 async function main() {
     const transport = new stdio_js_1.StdioServerTransport();
