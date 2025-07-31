@@ -1,6 +1,8 @@
-import { select } from "@inquirer/prompts";
+import { input, select } from "@inquirer/prompts";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Tool } from "@modelcontextprotocol/sdk/types.js";
+
 
 const mcp = new Client({
     name: "text-client-video", version: "1.0.0"
@@ -40,10 +42,30 @@ async function main() {
                 description: tool.description,
             })),
                 }) 
-                console.log(toolName)
+            const tool = tools.find(t => t.name === toolName)
+        if (tool == null) {
+          console.error("Tool not found.")
+        } else {
+          await handleTool(tool)
         }
-
+        break
     }
+}
+}
+
+async function handleTool(tool: Tool){
+    const args: Record<string,string> = {}
+    for (const [ key, value] of Object.entries(tool.inputSchema.properties ?? {})){
+        args[key] = await input({
+           message: `Enter value for ${key}(${(value as {type: string}).type}): ` 
+        })
+    }
+
+    const res = mcp.callTool({
+        name: tool.name,
+        arguments: args
+    })
+      console.log(((await res).content as [{ text: string }])[0].text)
 }
 
 main()
