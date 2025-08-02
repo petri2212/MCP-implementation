@@ -14,7 +14,7 @@ const server = new McpServer({
         prompts:{},
     }
 })
-
+/*
 server.resource(
     "users",
     "user://all",
@@ -30,8 +30,8 @@ server.resource(
              contents:[{uri: uri.href, text: JSON.stringify(users), mimeType:"application/json"}]
         }
     }
-)
-
+)*/
+/*
 server.resource("user-details", new ResourceTemplate("users://{userId}/profile", {list:undefined}),
      {
         description: "Get a user's details from the database",
@@ -65,7 +65,7 @@ server.resource("get-jobs", "job://all",
     const appKey = process.env.ADZUNA_APP_KEY;
 
     const response = await fetch(`https://api.adzuna.com/v1/api/jobs/it/search/1?app_id=${appId}&app_key=${appKey}&&results_per_page=20&what=javascript%20developer&content-type=application/json`);
-    http://api.adzuna.com/v1/api/jobs/gb/search/1?app_id={YOUR API ID}&app_key={YOUR API KEY}&results_per_page=20&what=javascript%20developer&content-type=application/json
+    //http://api.adzuna.com/v1/api/jobs/gb/search/1?app_id={YOUR API ID}&app_key={YOUR API KEY}&results_per_page=20&what=javascript%20developer&content-type=application/json
     if (!response.ok) {
       throw new Error(`Failed to fetch jobs from Adzuna: ${response.statusText}`);
     }
@@ -177,8 +177,127 @@ server.tool(
       }
     }
   }
+)*/
+
+//u have to install mongodb
+server.tool(
+  "save-pdf-to-mongo",
+  "Save a local PDF file to MongoDB",
+  {
+    title: "Save PDF to MongoDB",
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: true,
+  },
+  async () => {
+    
+    const { MongoClient } = await import("mongodb")
+    const fs = await import("fs/promises")
+    const path = await import("path")
+    const mongoUri = process.env.MONGODB_URI
+    //const mongoUri = "mongodb://localhost:27017"
+    if (!mongoUri) {
+      throw new Error("MONGODB_URI environment variable is not set")
+    }
+    const client = new MongoClient(mongoUri)
+  
+   
+
+    try {
+      //  Connetti al DB
+      await client.connect()
+      
+      const db = client.db("IkigAI")
+      const collection = db.collection("CVs")
+
+      //  Percorso al PDF (puoi sostituire con quello che preferisci)
+      const pdfPath = path.resolve("files", "Andrei__Resume.pdf")
+      const buffer = await fs.readFile(pdfPath)
+
+      //  Documento Mongo
+      const result = await collection.insertOne({
+        nome: "documento.pdf",
+        tipo: "application/pdf",
+        file: buffer,
+        uploadedAt: new Date(),
+      })
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `PDF salvato con ID: ${result.insertedId.toString()}`,
+          },
+        ],
+      }
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: "Errore nel salvataggio del PDF." }],
+      }
+    } finally {
+      await client.close()
+    }
+  }
 )
 
+server.tool(
+  "get-pdf-from-mongo",
+  "Retrieve a PDF from MongoDB and save it locally",
+  {
+    title: "Get PDF from MongoDB",
+    readOnlyHint: true,
+    destructiveHint: false,
+    idempotentHint: true,
+    openWorldHint: true,
+  },
+  async () => {
+    const { MongoClient } = await import("mongodb")
+    const fs = await import("fs/promises")
+    const path = await import("path")
+
+    const mongoUri = process.env.MONGODB_URI
+    if (!mongoUri) {
+      throw new Error("MONGODB_URI environment variable is not set")
+    }
+    const client = new MongoClient(mongoUri)
+
+    try {
+      await client.connect()
+      const db = client.db("IkigAI")
+      const collection = db.collection("CVs")
+
+      const filename = "documento.pdf" 
+      const doc = await collection.findOne({ nome: filename })
+
+      if (!doc) {
+        return {
+          content: [{ type: "text", text: `PDF "${filename}" non trovato.` }],
+        }
+      }
+
+      const outputPath = path.resolve("files", filename)
+      await fs.mkdir(path.dirname(outputPath), { recursive: true })
+      await fs.writeFile(outputPath, doc.file.buffer)
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: `PDF "${filename}" salvato localmente in: ${outputPath}`,
+          },
+        ],
+      }
+    } catch (err) {
+      return {
+        content: [{ type: "text", text: "Errore nel recupero del PDF." }],
+      }
+    } finally {
+      await client.close()
+    }
+  }
+)
+/*
 server.prompt("generate-fake-user", "Generate a fake user based on a given name", {name: z.string()
     },
         ({name}) => {
@@ -194,7 +313,7 @@ server.prompt("generate-fake-user", "Generate a fake user based on a given name"
             
           }
         }
-    )
+    )*/
 
 async function createUser(user:{
     name: string,
@@ -214,8 +333,13 @@ async function createUser(user:{
 
 
 async function main() {
+  // try {
     const transport = new StdioServerTransport()
     await server.connect(transport)
+  //} catch (err) {
+   // console.error("Fatal error in server:", err)
+   // process.exit(1)
+  //}
 }
 
 main()
